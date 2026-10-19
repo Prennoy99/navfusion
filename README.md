@@ -12,7 +12,7 @@
 ## Status
 - [x] Project scaffold, KITTI OXTS downloader (~40 MB via HTTP range requests instead of ~91 GB)
 - [x] OXTS loader, WGS84 → ENU transform, simulated 1 Hz GPS and MEMS IMU
-- [ ] Dead reckoning baseline
+- [x] Dead reckoning baseline
 - [ ] 8-state EKF with bias estimation and non-holonomic constraint
 - [ ] GPS outage simulation
 - [ ] LSTM velocity pseudo-measurement (training notebook + neural EKF)
@@ -34,6 +34,19 @@ tells that story in three acts on real KITTI Raw drives:
 
 The filters only ever see simulated sensors: a noisy 1 Hz consumer GPS (σ = 2.5 m) and a
 MEMS-corrupted IMU. The RTK-grade OXTS data is used only for ground truth and training labels.
+
+## Act 1: dead reckoning
+
+Integrating the MEMS IMU alone, even from a perfect initial state, drifts by ~6 m after 10 s,
+~145 m after 60 s and ~1 km by the end of the 290 s validation drive (mean over 5 noise seeds).
+An accelerometer bias b alone gives b·t²/2; a gyro bias additionally rotates the whole velocity
+vector, so the error keeps growing in the wrong direction.
+
+![Dead reckoning drift on the validation drive](assets/dead_reckoning_2011_09_30_drive_0018.png)
+
+```bash
+python -m navfusion.visualization.plot_dead_reckoning
+```
 
 ## Architecture
 *TBD (Mermaid diagram)*

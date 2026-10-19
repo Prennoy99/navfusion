@@ -5,6 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
+from navfusion.data.coordinate_transforms import enu_to_geodetic, wrap_angle
 from navfusion.data.kitti_loader import OXTS_FIELDS, OxtsSequence
 
 ORIGIN = (49.0495, 8.3966, 113.0)  # Karlsruhe, where KITTI was recorded
@@ -22,13 +23,22 @@ def make_sequence(t: np.ndarray, name: str = "synthetic", **fields: np.ndarray) 
 
 def circle_drive(duration: float = 60.0, dt: float = 0.1, speed: float = 10.0,
                  radius: float = 50.0) -> OxtsSequence:
-    """Constant-speed counter-clockwise circle with physically consistent OXTS fields."""
+    """Constant-speed counter-clockwise circle with physically consistent OXTS fields.
+
+    Starts at the ENU origin heading east; the centre is at (0, radius). lat/lon/alt are the exact
+    geodetic coordinates of the analytic track, and yaw is wrapped to (-pi, pi] like OXTS.
+    """
     t = np.arange(0.0, duration, dt)
     w = speed / radius
     yaw = w * t
+    enu = np.column_stack([radius * np.sin(yaw), radius * (1 - np.cos(yaw)), np.zeros_like(t)])
+    lat, lon, alt = enu_to_geodetic(enu, ORIGIN).T
     return make_sequence(
         t,
-        yaw=yaw,
+        lat=lat,
+        lon=lon,
+        alt=alt,
+        yaw=wrap_angle(yaw),
         ve=speed * np.cos(yaw),
         vn=speed * np.sin(yaw),
         vf=np.full_like(t, speed),

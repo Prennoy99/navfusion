@@ -3,7 +3,6 @@
 import numpy as np
 import pytest
 
-from navfusion.data.coordinate_transforms import enu_to_geodetic
 from navfusion.data.kitti_loader import (
     OXTS_FIELDS,
     ground_truth,
@@ -62,18 +61,12 @@ def test_timestamp_count_mismatch_raises(tmp_path):
 
 
 def test_ground_truth_on_circle(circle):
-    """Integrate the circle's ENU velocity into lat/lon, then check the ENU track comes back."""
-    gt0 = ground_truth(circle)
-    # build lat/lon from the analytic circle (radius 50 m, centre at (0, 50) m)
-    r = 50.0
-    e, n = r * np.sin(gt0.yaw), r * (1 - np.cos(gt0.yaw))
-    geo = enu_to_geodetic(np.stack([e, n, np.zeros_like(e)], axis=-1), ORIGIN)
-    data = circle.data.copy()
-    data[:, :3] = geo
-    seq = type(circle)(circle.name, circle.t, circle.t0, data)
-    gt = ground_truth(seq)
-    np.testing.assert_allclose(gt.pos, np.stack([e, n], axis=-1), atol=1e-6)
+    """lat/lon of a 50 m circle (centre (0, 50) m) come back as the analytic ENU track."""
+    gt = ground_truth(circle)
+    yaw = np.unwrap(gt.yaw)
+    np.testing.assert_allclose(gt.pos, np.column_stack([50 * np.sin(yaw), 50 * (1 - np.cos(yaw))]),
+                               atol=1e-6)
+    np.testing.assert_allclose(gt.pos[0], 0.0, atol=1e-9)
     np.testing.assert_allclose(gt.speed, 10.0)
     # heading is the direction of the ENU velocity
-    np.testing.assert_allclose(np.arctan2(gt.vel[:, 1], gt.vel[:, 0]),
-                               np.arctan2(np.sin(gt.yaw), np.cos(gt.yaw)), atol=1e-9)
+    np.testing.assert_allclose(np.arctan2(gt.vel[:, 1], gt.vel[:, 0]), gt.yaw, atol=1e-9)

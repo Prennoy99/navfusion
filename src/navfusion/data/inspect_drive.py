@@ -29,10 +29,7 @@ from navfusion.data.kitti_loader import (  # noqa: E402
     load_drive,
 )
 from navfusion.data.simulators import simulate_sensors  # noqa: E402
-
-TRUTH_COLOR = "#2a78d6"
-GPS_COLOR = "#eb6834"
-INK, INK_MUTED, GRID = "#0b0b0b", "#52514e", "#e4e3df"
+from navfusion.visualization import style  # noqa: E402
 
 
 def _split_of(drive: str) -> str:
@@ -87,29 +84,24 @@ def report_drive(drive: str, seed: int, out: Path) -> None:
     zoom_center = gt.pos[len(gt.pos) // 3]
     half = 40.0
     for ax in (ax_full, ax_zoom):
-        ax.plot(gt.pos[:, 0], gt.pos[:, 1], color=TRUTH_COLOR, lw=2,
+        ax.plot(gt.pos[:, 0], gt.pos[:, 1], color=style.TRUTH, lw=1.5,
                 label="Ground truth (RTK OXTS)")
-        ax.scatter(sim.gps.pos[:, 0], sim.gps.pos[:, 1], s=14, color=GPS_COLOR,
+        ax.scatter(sim.gps.pos[:, 0], sim.gps.pos[:, 1], s=16, color=style.GPS,
                    edgecolors="white", linewidths=0.6, zorder=3,
                    label=f"Simulated GPS (1 Hz, σ = {sim.gps.sigma_m} m)")
-        ax.grid(color=GRID, lw=0.8)
-        ax.set_axisbelow(True)
-        ax.set_xlabel("East [m]", color=INK_MUTED)
-        ax.set_ylabel("North [m]", color=INK_MUTED)
-        ax.tick_params(colors=INK_MUTED, labelsize=9)
-        for s in ax.spines.values():
-            s.set_visible(False)
+        style.style_axes(ax, "East [m]", "North [m]")
     ax_full.set_aspect("equal", adjustable="datalim")
     ax_zoom.set_aspect("equal", adjustable="box")
-    ax_full.plot(*gt.pos[0], "o", color=INK, ms=6)
-    ax_full.annotate("start", gt.pos[0], xytext=(6, 6), textcoords="offset points", color=INK)
+    ax_full.plot(*gt.pos[0], "o", color=style.INK, ms=6)
+    ax_full.annotate("start", gt.pos[0], xytext=(6, 6), textcoords="offset points",
+                     color=style.INK)
     ax_full.add_patch(plt.Rectangle(zoom_center - half, 2 * half, 2 * half, fill=False,
-                                    ec=INK_MUTED, lw=1, ls="--"))
-    ax_full.set_title(f"{drive}: full drive in ENU", color=INK, loc="left", fontsize=11)
+                                    ec=style.INK_MUTED, lw=1, ls="--"))
+    ax_full.set_title(f"{drive}: full drive in ENU", color=style.INK, loc="left", fontsize=11)
     ax_full.legend(loc="best", frameon=False, fontsize=9)
     ax_zoom.set_xlim(zoom_center[0] - half, zoom_center[0] + half)
     ax_zoom.set_ylim(zoom_center[1] - half, zoom_center[1] + half)
-    ax_zoom.set_title("Zoom: 80 m × 80 m", color=INK, loc="left", fontsize=11)
+    ax_zoom.set_title("Zoom: 80 m × 80 m", color=style.INK, loc="left", fontsize=11)
     fig.tight_layout()
     out.parent.mkdir(parents=True, exist_ok=True)
     fig.savefig(out, dpi=150, facecolor="white")
