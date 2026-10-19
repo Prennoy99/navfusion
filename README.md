@@ -13,7 +13,7 @@
 - [x] Project scaffold, KITTI OXTS downloader (~40 MB via HTTP range requests instead of ~91 GB)
 - [x] OXTS loader, WGS84 → ENU transform, simulated 1 Hz GPS and MEMS IMU
 - [x] Dead reckoning baseline
-- [ ] 8-state EKF with bias estimation and non-holonomic constraint
+- [x] 8-state EKF with bias estimation and non-holonomic constraint
 - [ ] GPS outage simulation
 - [ ] LSTM velocity pseudo-measurement (training notebook + neural EKF)
 - [ ] Evaluation (ATE / RPE / yaw error over 2 test drives × 2 outage patterns × 5 seeds)
@@ -46,6 +46,26 @@ vector, so the error keeps growing in the wrong direction.
 
 ```bash
 python -m navfusion.visualization.plot_dead_reckoning
+```
+
+## Act 2: the EKF with GPS
+
+An 8-state EKF, `x = [px, py, vx, vy, yaw, b_ax, b_ay, b_gz]`, fuses the MEMS IMU (prediction at
+~10 Hz) with the noisy 1 Hz GPS fixes. A non-holonomic constraint (a car does not slide sideways, so
+its lateral body velocity ≈ 0) is applied as a pseudo-measurement at every IMU step. The filter
+is initialised from the GPS alone, and its noise parameters were tuned on the validation drive only.
+
+On the validation drive (5 noise seeds, first 30 s excluded) the EKF halves the raw GPS error:
+**1.64 ± 0.05 m** position RMSE against 3.52 m for the raw fixes, with 1.5° yaw RMSE. It is also
+*consistent*: the position NEES (error squared, weighted by the filter's own covariance) averages
+1.7 and the GPS innovation NIS 1.9, against an ideal of 2 for both. So its uncertainty estimate
+can be trusted, which matters once the GPS goes away. The IMU biases are observable while GPS is
+available and converge to the values injected by the simulator within about a minute:
+
+![EKF on the validation drive](assets/ekf_2011_09_30_drive_0018.png)
+
+```bash
+python -m navfusion.visualization.plot_ekf
 ```
 
 ## Architecture
