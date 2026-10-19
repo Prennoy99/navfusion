@@ -11,7 +11,7 @@
 
 ## Status
 - [x] Project scaffold, KITTI OXTS downloader (~40 MB via HTTP range requests instead of ~91 GB)
-- [ ] OXTS loader, WGS84 → ENU transform, simulated 1 Hz GPS and MEMS IMU
+- [x] OXTS loader, WGS84 → ENU transform, simulated 1 Hz GPS and MEMS IMU
 - [ ] Dead reckoning baseline
 - [ ] 8-state EKF with bias estimation and non-holonomic constraint
 - [ ] GPS outage simulation
@@ -65,6 +65,15 @@ ruff check .
 [KITTI Raw](https://www.cvlibs.net/datasets/kitti/raw_data.php) (Geiger et al., *Vision meets
 Robotics: The KITTI Dataset*, IJRR 2013), licensed CC BY-NC-SA 3.0. Only the OXTS GPS/IMU streams of
 8 drives are used: 5 for training, 1 for validation, 2 for testing.
+
+The filters never see the RTK-grade OXTS data. They get a simulated 1 Hz GPS (σ = 2.5 m) and a
+MEMS-corrupted IMU, both seeded so that every method sees identical noise:
+
+![Ground truth vs simulated GPS on the validation drive](assets/gps_track_2011_09_30_drive_0018.png)
+
+```bash
+python -m navfusion.data.inspect_drive   # integrity checks for all drives + this figure
+```
 
 ## References
 - M. Brossard, A. Barrau, S. Bonnabel, *AI-IMU Dead-Reckoning*, IEEE T-IV 2020.
