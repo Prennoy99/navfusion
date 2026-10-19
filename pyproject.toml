@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "navfusion"
+version = "0.1.0"
+description = "GPS/IMU vehicle state estimation on KITTI: dead reckoning, an 8-state EKF from scratch, and an LSTM velocity pseudo-measurement for GPS outages."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Prennoy Babu" }]
+# Core = everything the filters, evaluation and plots need. torch is deliberately NOT core:
+# the dashboard Docker image installs core + [dashboard] only.
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "pandas>=2.1",
+    "matplotlib>=3.8",
+]
+
+[project.optional-dependencies]
+train = ["torch>=2.2"]
+viz = ["imageio>=2.33"]
+dashboard = ["streamlit>=1.32"]
+# pymap3d is a test oracle only: our WGS84 -> ENU transform is written from scratch.
+dev = ["pytest>=8.0", "ruff>=0.4", "pymap3d>=3.0"]
+
+[project.urls]
+Repository = "https://github.com/Prennoy99/navfusion"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["data/kitti_raw"]
+
+[tool.ruff.lint]
+# pycodestyle, pyflakes, isort, pyupgrade, bugbear, numpy-specific rules
+select = ["E", "W", "F", "I", "UP", "B", "NPY"]

@@ -1,0 +1,27 @@
+# KITTI data: fetched by data/download_data.sh, never committed
+data/kitti_raw/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+
+# NOTE: results/ and models/*.pt are committed on purpose: the dashboard and README figures
+# work from a fresh clone without KITTI or a GPU, and the trained LSTM is only ~200 KB.
+
+# Secrets
+.env
